@@ -19,5 +19,3 @@ INSERT INTO posts (title, content, author_id, created_at) VALUES
 ('성능 최적화 팁', 'Spring Boot 애플리케이션의 성능을 향상시키는 다양한 방법들을 정리했습니다.', 1, CURRENT_TIMESTAMP),
 ('배포 자동화', 'CI/CD 파이프라인을 구축하여 Spring Boot 애플리케이션을 자동으로 배포하는 방법을 소개합니다.', 4, CURRENT_TIMESTAMP);
 
-
-select * from menus;
