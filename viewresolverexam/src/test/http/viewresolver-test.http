@@ -1,0 +1,57 @@
+### ===========================================
+### ViewResolver 테스트 (HTML 응답)
+### ===========================================
+
+### 1. 홈 페이지 (ViewResolver)
+GET http://localhost:8080/pages/home
+
+### 2. 사용자 목록 페이지 (ViewResolver)
+GET http://localhost:8080/pages/users
+
+### 3. 사용자 상세 페이지 (ViewResolver) - 존재하는 사용자
+GET http://localhost:8080/pages/users/1
+
+### 4. 사용자 상세 페이지 (ViewResolver) - 존재하지 않는 사용자 (에러 페이지)
+GET http://localhost:8080/pages/users/999
+
+### ===========================================
+### MessageConverter 테스트 (JSON 응답)
+### ===========================================
+
+### 5. API 정보 (MessageConverter)
+GET http://localhost:8080/api/info
+
+### 6. 모든 사용자 조회 (MessageConverter)
+GET http://localhost:8080/api/users
+
+### 7. 특정 사용자 조회 (MessageConverter) - 존재하는 사용자
+GET http://localhost:8080/api/users/1
+
+### 8. 특정 사용자 조회 (MessageConverter) - 존재하지 않는 사용자
+GET http://localhost:8080/api/users/999
+
+### 9. 사용자 통계 정보 (MessageConverter)
+GET http://localhost:8080/api/users/stats
+
+### 10. 사용자 생성 (MessageConverter) - JSON 요청/응답
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "id": 4,
+  "name": "David",
+  "age": 28,
+  "email": "david@example.com"
+}
+
+### ===========================================
+### 비교 테스트
+### ===========================================
+
+### 11. 같은 데이터, 다른 응답 형식 비교
+### ViewResolver: HTML 테이블 형태
+GET http://localhost:8080/pages/users
+
+###
+### MessageConverter: JSON 배열 형태
+GET http://localhost:8080/api/users 

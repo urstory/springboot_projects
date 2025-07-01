@@ -1,0 +1,51 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: filterexam
+
+# Actuator 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, env, metrics, beans
+  endpoint:
+    health:
+      show-details: always
+
+# 커스텀 설정
+app:
+  name: "Filter & Interceptor Example"
+  version: "1.0.0"
+  description: "Spring Boot Filter와 Interceptor 학습을 위한 예제"
+  
+  # Filter 설정
+  filter:
+    logging:
+      enabled: true
+      log-request-details: true
+    performance:
+      enabled: true
+      slow-request-threshold: 1000
+    cors:
+      enabled: true
+      allowed-origins: "*"
+      
+  # Interceptor 설정  
+  interceptor:
+    auth:
+      enabled: true
+      excluded-paths: "/public/**,/health,/actuator/**"
+    logging:
+      enabled: true
+    performance:
+      enabled: true
+
+logging:
+  level:
+    com.example.filterexam: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n" 

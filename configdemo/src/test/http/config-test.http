@@ -1,0 +1,152 @@
+### Configuration Demo HTTP 테스트 파일
+### 내용.md 5.3절, 5.4절 Configuration 예제 테스트
+
+### ================================
+### 프로파일 및 환경 설정 테스트 (5.4절)
+### ================================
+
+### 1. 전체 설정 정보 요약
+GET http://localhost:8080/api/config/summary
+Content-Type: application/json
+
+###
+
+### 2. 프로파일별 커스텀 메시지 (5.4절 예제)
+GET http://localhost:8080/api/config/profile-message
+Content-Type: application/json
+
+###
+
+### 3. 현재 활성화된 프로파일 정보
+GET http://localhost:8080/api/config/profiles
+Content-Type: application/json
+
+###
+
+### 4. 환경 설정 요약 정보
+GET http://localhost:8080/api/config/environment
+Content-Type: application/json
+
+###
+
+### ================================
+### 커스텀 프로퍼티 테스트 (5.3절)
+### ================================
+
+### 5. 전체 애플리케이션 프로퍼티 조회
+GET http://localhost:8080/api/config/app-properties
+Content-Type: application/json
+
+###
+
+### 6. 데이터베이스 설정 (환경변수 활용)
+GET http://localhost:8080/api/config/database-config
+Content-Type: application/json
+
+###
+
+### 7. 서버 목록 설정 (List 타입)
+GET http://localhost:8080/api/config/servers
+Content-Type: application/json
+
+###
+
+### 8. 에러 코드 매핑 (Map 타입)
+GET http://localhost:8080/api/config/error-codes
+Content-Type: application/json
+
+###
+
+### 9. 타임아웃 설정 (중첩 객체)
+GET http://localhost:8080/api/config/timeout-config
+Content-Type: application/json
+
+###
+
+### 10. 기능 설정 (프로파일별)
+GET http://localhost:8080/api/config/features
+Content-Type: application/json
+
+###
+
+### ================================
+### DEV 프로파일 테스트 (포트 8081)
+### ================================
+
+### 11. DEV 환경 - 프로파일 메시지
+GET http://localhost:8081/api/config/profile-message
+Content-Type: application/json
+
+###
+
+### 12. DEV 환경 - 환경 정보
+GET http://localhost:8081/api/config/environment
+Content-Type: application/json
+
+###
+
+### 13. DEV 환경 - 전체 요약
+GET http://localhost:8081/api/config/summary
+Content-Type: application/json
+
+###
+
+### ================================
+### TEST 프로파일 테스트 (포트 8082)
+### ================================
+
+### 14. TEST 환경 - 프로파일 메시지
+GET http://localhost:8082/api/config/profile-message
+Content-Type: application/json
+
+###
+
+### 15. TEST 환경 - 환경 정보
+GET http://localhost:8082/api/config/environment
+Content-Type: application/json
+
+###
+
+### ================================
+### 환경변수 테스트 예시
+### ================================
+
+### 16. 환경변수 설정 후 데이터베이스 설정 확인
+### 실행 전에 환경변수 설정:
+### set DB_HOST=mydbserver.com
+### set DB_PORT=3307
+### set DB_NAME=mydatabase
+### set DB_USER=myuser
+### set DB_PASS=mypassword
+GET http://localhost:8080/api/config/database-config
+Content-Type: application/json
+
+###
+
+### ================================
+### Actuator 엔드포인트 (참고용)
+### ================================
+
+### 17. 설정 프로퍼티 정보 (Actuator)
+GET http://localhost:8080/actuator/configprops
+Content-Type: application/json
+
+###
+
+### 18. 환경 정보 (Actuator)
+GET http://localhost:8080/actuator/env
+Content-Type: application/json
+
+###
+
+### 19. 애플리케이션 정보 (Actuator)
+GET http://localhost:8080/actuator/info
+Content-Type: application/json
+
+###
+
+### 20. 헬스 체크
+GET http://localhost:8080/actuator/health
+Content-Type: application/json
+
+### 

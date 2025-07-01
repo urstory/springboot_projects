@@ -1,0 +1,262 @@
+### Data JPA 예제 HTTP 테스트
+### 내용.md 7장 - JPA와 Spring Data JDBC 예제
+
+### 1. 모든 상품 조회
+GET http://localhost:8080/api/products
+Accept: application/json
+
+###
+
+### 2. 특정 상품 조회 (ID=1)
+GET http://localhost:8080/api/products/1
+Accept: application/json
+
+###
+
+### 3. 상품 생성
+POST http://localhost:8080/api/products
+Content-Type: application/json
+
+{
+  "name": "새로운 제품",
+  "price": 50000.0,
+  "description": "테스트용 제품",
+  "category": "Test",
+  "inStock": true
+}
+
+###
+
+### 4. 상품 업데이트 (ID=1)
+PUT http://localhost:8080/api/products/1
+Content-Type: application/json
+
+{
+  "name": "업데이트된 iPhone 15",
+  "price": 1300000.0,
+  "description": "가격이 인상된 최신 스마트폰",
+  "category": "Electronics",
+  "inStock": true
+}
+
+###
+
+### 5. 이름으로 상품 검색
+GET http://localhost:8080/api/products/search/name/iPhone%2015
+Accept: application/json
+
+###
+
+### 6. 키워드로 상품 검색
+GET http://localhost:8080/api/products/search?keyword=Spring
+Accept: application/json
+
+###
+
+### 7. 카테고리별 상품 조회
+GET http://localhost:8080/api/products/category/Electronics
+Accept: application/json
+
+###
+
+### 8. 가격 범위로 상품 조회
+GET http://localhost:8080/api/products/price-range?minPrice=30000&maxPrice=100000
+Accept: application/json
+
+###
+
+### 9. 최대 가격 이하 상품 조회
+GET http://localhost:8080/api/products/price-max/1000000
+Accept: application/json
+
+###
+
+### 10. 재고 있는 상품 조회
+GET http://localhost:8080/api/products/in-stock
+Accept: application/json
+
+###
+
+### 11. 카테고리별 가격순 정렬 조회
+GET http://localhost:8080/api/products/category/Electronics/ordered
+Accept: application/json
+
+###
+
+### 12. 상품 통계 정보
+GET http://localhost:8080/api/products/stats
+Accept: application/json
+
+###
+
+### 13. EntityManager CRUD 예제 실행
+POST http://localhost:8080/api/products/demo/entity-manager
+Accept: application/json
+
+###
+
+### 14. Spring Data JPA CRUD 예제 실행
+POST http://localhost:8080/api/products/demo/spring-data-jpa
+Accept: application/json
+
+###
+
+### 15. 상품 삭제 (ID=1)
+DELETE http://localhost:8080/api/products/1
+
+###
+
+### ==== 사용자 API 테스트 ====
+
+### 16. 모든 사용자 조회
+GET http://localhost:8080/api/users
+Accept: application/json
+
+###
+
+### 17. 특정 사용자 조회 (ID=1)
+GET http://localhost:8080/api/users/1
+Accept: application/json
+
+###
+
+### 18. 사용자명으로 조회
+GET http://localhost:8080/api/users/username/john_doe
+Accept: application/json
+
+###
+
+### 19. 이메일로 조회
+GET http://localhost:8080/api/users/email/john@example.com
+Accept: application/json
+
+###
+
+### 20. 사용자 생성 (기본)
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "username": "new_user",
+  "email": "newuser@example.com"
+}
+
+###
+
+### 21. 사용자 생성 (전체 정보)
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "username": "test_user",
+  "email": "testuser@example.com",
+  "fullName": "Test User",
+  "age": 30
+}
+
+###
+
+### 22. 사용자 업데이트
+PUT http://localhost:8080/api/users/1
+Content-Type: application/json
+
+{
+  "fullName": "Updated John Doe",
+  "age": 29
+}
+
+###
+
+### 23. 사용자 비활성화
+PATCH http://localhost:8080/api/users/1/deactivate
+
+###
+
+### 24. 활성 사용자 조회
+GET http://localhost:8080/api/users/active
+Accept: application/json
+
+###
+
+### 25. 나이 범위로 사용자 조회
+GET http://localhost:8080/api/users/age-range?minAge=25&maxAge=35
+Accept: application/json
+
+###
+
+### 26. 최근 가입 사용자 조회 (기본 7일)
+GET http://localhost:8080/api/users/recent
+Accept: application/json
+
+###
+
+### 27. 최근 가입 사용자 조회 (30일)
+GET http://localhost:8080/api/users/recent?days=30
+Accept: application/json
+
+###
+
+### 28. 사용자명 검색
+GET http://localhost:8080/api/users/search?keyword=john
+Accept: application/json
+
+###
+
+### 29. 나이순 정렬 조회
+GET http://localhost:8080/api/users/ordered-by-age
+Accept: application/json
+
+###
+
+### 30. 활성 사용자 중 특정 나이 이상 조회
+GET http://localhost:8080/api/users/active/min-age/30
+Accept: application/json
+
+###
+
+### 31. 사용자 통계 정보
+GET http://localhost:8080/api/users/stats
+Accept: application/json
+
+###
+
+### 32. 사용자 삭제 (ID=1)
+DELETE http://localhost:8080/api/users/1
+
+###
+
+### ==== 오류 테스트 ====
+
+### 33. 존재하지 않는 상품 조회
+GET http://localhost:8080/api/products/999
+Accept: application/json
+
+###
+
+### 34. 존재하지 않는 사용자 조회
+GET http://localhost:8080/api/users/999
+Accept: application/json
+
+###
+
+### 35. 중복 사용자명으로 생성 시도
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "username": "john_doe",
+  "email": "duplicate@example.com"
+}
+
+###
+
+### 36. 중복 이메일로 생성 시도
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "username": "duplicate_user",
+  "email": "john@example.com"
+}
+
+### 

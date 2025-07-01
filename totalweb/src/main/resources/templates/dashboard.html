@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대시보드 - TotalWeb</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .main-content {
+            min-height: 100vh;
+        }
+        .stat-card {
+            border-left: 4px solid;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .stat-card.posts { border-left-color: #007bff; }
+        .stat-card.users { border-left-color: #28a745; }
+        .stat-card.api { border-left-color: #ffc107; }
+        .stat-card.jwt { border-left-color: #dc3545; }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .loading {
+            display: none;
+        }
+        .api-error {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 사이드바 -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <h5 class="text-center mb-4">
+                        <i class="fas fa-desktop"></i> TotalWeb
+                    </h5>
+                    
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" th:href="@{/dashboard}">
+                                <i class="fas fa-tachometer-alt"></i> 대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/posts}">
+                                <i class="fas fa-file-alt"></i> 게시글 관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/users}">
+                                <i class="fas fa-users"></i> 사용자 관리
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <div class="nav-item">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-link nav-link border-0 w-100 text-start">
+                                <i class="fas fa-sign-out-alt"></i> 로그아웃
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- 메인 콘텐츠 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <!-- 헤더 -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-tachometer-alt"></i> 대시보드
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <span class="navbar-text me-3">
+                            환영합니다, <span sec:authentication="name">사용자</span>님!
+                        </span>
+                        <button type="button" class="btn btn-outline-primary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> 새로고침
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 로딩 및 에러 메시지 -->
+                <div class="loading alert alert-info">
+                    <i class="fas fa-spinner fa-spin"></i> 데이터를 불러오는 중...
+                </div>
+                
+                <div class="api-error alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="error-message"></span>
+                </div>
+                
+                <!-- 통계 카드 -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card posts h-100">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            총 게시글 수
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalPosts">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-file-alt fa-2x text-primary"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card users h-100">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            활성 사용자
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="activeUsers">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-users fa-2x text-success"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card api h-100">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            API 상태
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="apiStatus">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-server fa-2x text-warning"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stat-card jwt h-100">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                            JWT 토큰
+                                        </div>
+                                        <div class="h6 mb-0 font-weight-bold text-gray-800" id="jwtStatus">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-key fa-2x text-danger"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 차트 및 테이블 -->
+                <div class="row">
+                    <!-- 게시글 차트 -->
+                    <div class="col-xl-8 col-lg-7">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-chart-bar"></i> 최근 게시글 현황
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="postsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 최근 게시글 목록 -->
+                    <div class="col-xl-4 col-lg-5">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-list"></i> 최근 게시글
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="recentPosts">
+                                    <div class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> 로딩 중...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- API 연결 정보 -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">
+                                    <i class="fas fa-info-circle"></i> API 연결 정보
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6><i class="fas fa-server"></i> 서버 정보</h6>
+                                        <p><strong>API 서버:</strong> <span th:text="${apiBaseUrl}">http://localhost:8082</span></p>
+                                        <p><strong>현재 시간:</strong> <span id="currentTime"></span></p>
+                                        <p><strong>마지막 업데이트:</strong> <span id="lastUpdate">-</span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6><i class="fas fa-user"></i> 인증 정보</h6>
+                                        <p><strong>현재 사용자:</strong> <span sec:authentication="name">-</span></p>
+                                        <p><strong>권한:</strong> <span sec:authentication="authorities">-</span></p>
+                                        <p><strong>JWT 상태:</strong> <span id="jwtValidStatus">확인 중...</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script th:inline="javascript">
+        const API_BASE_URL = /*[[${apiBaseUrl}]]*/ 'http://localhost:8082';
+        
+        // JWT 토큰 관리
+        const TokenManager = {
+            get: () => localStorage.getItem('jwt_token'),
+            set: (token) => localStorage.setItem('jwt_token', token),
+            remove: () => localStorage.removeItem('jwt_token'),
+            isValid: () => {
+                const token = TokenManager.get();
+                if (!token) return false;
+                
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    return payload.exp * 1000 > Date.now();
+                } catch {
+                    return false;
+                }
+            }
+        };
+        
+        // 차트 인스턴스
+        let postsChart = null;
+        
+        // API 호출 공통 함수
+        async function apiCall(endpoint, options = {}) {
+            const token = TokenManager.get();
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (token && TokenManager.isValid()) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                ...options,
+                headers
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+        
+        // 데이터 로드
+        async function loadDashboardData() {
+            showLoading(true);
+            hideError();
+            
+            try {
+                // 병렬로 데이터 요청
+                const [postsData, healthData] = await Promise.all([
+                    apiCall('/api/posts?page=0&size=100').catch(() => ({ content: [], totalElements: 0 })),
+                    fetch(`${API_BASE_URL}/actuator/health`).then(r => r.json()).catch(() => ({ status: 'DOWN' }))
+                ]);
+                
+                // 통계 업데이트
+                updateStats(postsData, healthData);
+                
+                // 최근 게시글 표시
+                displayRecentPosts(postsData.content || []);
+                
+                // 차트 업데이트
+                updateChart(postsData.content || []);
+                
+                // JWT 상태 확인
+                updateJwtStatus();
+                
+                // 마지막 업데이트 시간
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleString('ko-KR');
+                
+            } catch (error) {
+                console.error('대시보드 데이터 로드 실패:', error);
+                showError('대시보드 데이터를 불러오는데 실패했습니다: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 통계 업데이트
+        function updateStats(postsData, healthData) {
+            // 총 게시글 수
+            const totalPosts = postsData.totalElements || 0;
+            document.getElementById('totalPosts').textContent = totalPosts;
+            
+            // 활성 사용자 (임시 데이터)
+            document.getElementById('activeUsers').textContent = '5';
+            
+            // API 상태
+            const apiStatus = healthData.status === 'UP' ? 'ONLINE' : 'OFFLINE';
+            document.getElementById('apiStatus').textContent = apiStatus;
+            document.getElementById('apiStatus').className = 
+                `h5 mb-0 font-weight-bold ${apiStatus === 'ONLINE' ? 'text-success' : 'text-danger'}`;
+            
+            // JWT 토큰 상태
+            const jwtValid = TokenManager.isValid();
+            const jwtStatusEl = document.getElementById('jwtStatus');
+            jwtStatusEl.textContent = jwtValid ? 'VALID' : 'INVALID';
+            jwtStatusEl.className = `h6 mb-0 font-weight-bold ${jwtValid ? 'text-success' : 'text-danger'}`;
+        }
+        
+        // 최근 게시글 표시
+        function displayRecentPosts(posts) {
+            const container = document.getElementById('recentPosts');
+            
+            if (posts.length === 0) {
+                container.innerHTML = '<p class="text-muted">게시글이 없습니다.</p>';
+                return;
+            }
+            
+            const recentPosts = posts.slice(0, 5);
+            const html = recentPosts.map(post => `
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">${post.title}</h6>
+                        <small class="text-muted">
+                            by ${post.authorName} · ${new Date(post.createdAt).toLocaleDateString('ko-KR')}
+                        </small>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+        }
+        
+        // 차트 업데이트
+        function updateChart(posts) {
+            const ctx = document.getElementById('postsChart').getContext('2d');
+            
+            // 날짜별 게시글 수 계산
+            const dateCount = {};
+            const last7Days = [];
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                last7Days.push(dateStr);
+                dateCount[dateStr] = 0;
+            }
+            
+            posts.forEach(post => {
+                const postDate = new Date(post.createdAt).toISOString().split('T')[0];
+                if (dateCount.hasOwnProperty(postDate)) {
+                    dateCount[postDate]++;
+                }
+            });
+            
+            const labels = last7Days.map(date => {
+                const d = new Date(date);
+                return `${d.getMonth() + 1}/${d.getDate()}`;
+            });
+            
+            const data = last7Days.map(date => dateCount[date]);
+            
+            if (postsChart) {
+                postsChart.destroy();
+            }
+            
+            postsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '게시글 수',
+                        data: data,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // JWT 상태 업데이트
+        function updateJwtStatus() {
+            const jwtValidStatusEl = document.getElementById('jwtValidStatus');
+            const token = TokenManager.get();
+            
+            if (!token) {
+                jwtValidStatusEl.textContent = '토큰 없음';
+                jwtValidStatusEl.className = 'text-danger';
+                return;
+            }
+            
+            if (TokenManager.isValid()) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const expDate = new Date(payload.exp * 1000);
+                    jwtValidStatusEl.innerHTML = `유효 (만료: ${expDate.toLocaleString('ko-KR')})`;
+                    jwtValidStatusEl.className = 'text-success';
+                } catch {
+                    jwtValidStatusEl.textContent = '토큰 파싱 오류';
+                    jwtValidStatusEl.className = 'text-danger';
+                }
+            } else {
+                jwtValidStatusEl.textContent = '만료됨';
+                jwtValidStatusEl.className = 'text-danger';
+            }
+        }
+        
+        // 로딩 표시
+        function showLoading(show = true) {
+            const loadingEl = document.querySelector('.loading');
+            if (loadingEl) {
+                loadingEl.style.display = show ? 'block' : 'none';
+            }
+        }
+        
+        // 에러 표시
+        function showError(message) {
+            const errorEl = document.querySelector('.api-error');
+            const errorMsgEl = document.getElementById('error-message');
+            if (errorEl && errorMsgEl) {
+                errorMsgEl.textContent = message;
+                errorEl.style.display = 'block';
+            }
+        }
+        
+        // 에러 숨기기
+        function hideError() {
+            const errorEl = document.querySelector('.api-error');
+            if (errorEl) {
+                errorEl.style.display = 'none';
+            }
+        }
+        
+        // 데이터 새로고침
+        function refreshData() {
+            loadDashboardData();
+        }
+        
+        // 현재 시간 업데이트
+        function updateTime() {
+            document.getElementById('currentTime').textContent = new Date().toLocaleString('ko-KR');
+        }
+        
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            // JWT 토큰 확인
+            if (!TokenManager.get() || !TokenManager.isValid()) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // 데이터 로드
+            loadDashboardData();
+            
+            // 시간 업데이트
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            // 5분마다 데이터 자동 새로고침
+            setInterval(loadDashboardData, 5 * 60 * 1000);
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,26 @@
+### 사용자 생성(POST)
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "name": "Alice",
+  "age": 25
+}
+
+### 전체 사용자 조회(GET)
+GET http://localhost:8080/users
+
+### 특정 사용자 조회(GET)
+GET http://localhost:8080/users/1
+
+### 사용자 정보 수정(PUT)
+PUT http://localhost:8080/users/1
+Content-Type: application/json
+
+{
+  "name": "Alice Updated",
+  "age": 26
+}
+
+### 사용자 삭제(DELETE)
+DELETE http://localhost:8080/users/1 

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">사용자 상세정보</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #17a2b8;
+            padding-bottom: 10px;
+        }
+        .back-link {
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+        .user-card {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        .user-field {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            border-left: 4px solid #17a2b8;
+        }
+        .field-label {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        .field-value {
+            font-size: 1.1em;
+            color: #212529;
+        }
+        .info-box {
+            background-color: #cff4fc;
+            border: 1px solid #b6effb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .compare-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="/pages/users">← 사용자 목록으로 돌아가기</a>
+        </div>
+        
+        <h1 th:text="${title}">사용자 상세정보</h1>
+        
+        <div class="info-box">
+            <h3>🎯 ViewResolver 동작 확인</h3>
+            <p>이 페이지는 <strong>ViewResolver</strong>를 통해 생성되었습니다.</p>
+            <p>Controller가 반환한 <code>"user-detail"</code> View 이름이 <code>/templates/user-detail.html</code> 파일로 변환되었습니다.</p>
+        </div>
+
+        <div class="user-card" th:if="${user}">
+            <div class="user-field">
+                <div class="field-label">사용자 ID</div>
+                <div class="field-value" th:text="${user.id}">1</div>
+            </div>
+            
+            <div class="user-field">
+                <div class="field-label">이름</div>
+                <div class="field-value" th:text="${user.name}">Alice</div>
+            </div>
+            
+            <div class="user-field">
+                <div class="field-label">나이</div>
+                <div class="field-value" th:text="${user.age + '세'}">25세</div>
+            </div>
+            
+            <div class="user-field">
+                <div class="field-label">이메일</div>
+                <div class="field-value" th:text="${user.email}">alice@example.com</div>
+            </div>
+        </div>
+
+        <div class="compare-box">
+            <h3>🔍 비교해보기</h3>
+            <p><strong>ViewResolver vs MessageConverter</strong></p>
+            <ul>
+                <li><strong>현재 페이지 (ViewResolver)</strong>: HTML 카드 형태로 사용자 정보 표시</li>
+                <li><strong><a th:href="@{/api/users/{id}(id=${user.id})}" style="color: #007bff;">API 버전 (MessageConverter)</a></strong>: JSON 형태로 동일한 데이터 반환</li>
+            </ul>
+            <p>같은 데이터를 다른 방식으로 처리하는 것을 확인할 수 있습니다!</p>
+        </div>
+
+        <div class="info-box">
+            <h3>📋 처리 흐름</h3>
+            <ol>
+                <li><strong>요청</strong>: GET /pages/users/{id}</li>
+                <li><strong>Controller</strong>: PageController.userDetail() 메서드 실행</li>
+                <li><strong>Model 설정</strong>: 사용자 데이터를 Model에 추가</li>
+                <li><strong>View 이름 반환</strong>: "user-detail"</li>
+                <li><strong>ViewResolver</strong>: "user-detail" → "/templates/user-detail.html"</li>
+                <li><strong>Thymeleaf 처리</strong>: HTML 템플릿에 데이터 바인딩</li>
+                <li><strong>응답</strong>: 완성된 HTML 페이지 반환</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html> 

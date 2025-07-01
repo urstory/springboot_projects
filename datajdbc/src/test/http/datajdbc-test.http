@@ -1,0 +1,245 @@
+###
+# Spring Data JDBC API 테스트
+# 애플리케이션 실행 후 아래 테스트들을 실행하세요
+###
+
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+###
+# ===========================================
+# 상품 API 테스트
+# ===========================================
+
+### 1. 모든 상품 조회
+GET {{baseUrl}}/api/products
+Accept: {{contentType}}
+
+### 2. 상품 ID로 조회
+GET {{baseUrl}}/api/products/1
+Accept: {{contentType}}
+
+### 3. 새 상품 생성
+POST {{baseUrl}}/api/products
+Content-Type: {{contentType}}
+
+{
+  "name": "새로운 상품",
+  "price": 299.99,
+  "description": "테스트용 상품",
+  "category": "Test",
+  "inStock": true
+}
+
+### 4. 상품 업데이트
+PUT {{baseUrl}}/api/products/1
+Content-Type: {{contentType}}
+
+{
+  "name": "업데이트된 노트북",
+  "price": 1299.99,
+  "description": "업데이트된 고성능 노트북",
+  "category": "Electronics",
+  "inStock": true
+}
+
+### 5. 상품 삭제
+DELETE {{baseUrl}}/api/products/13
+Accept: {{contentType}}
+
+### 6. 이름으로 상품 검색
+GET {{baseUrl}}/api/products/search/name/노트북
+Accept: {{contentType}}
+
+### 7. 카테고리별 상품 조회
+GET {{baseUrl}}/api/products/category/Electronics
+Accept: {{contentType}}
+
+### 8. 가격 범위로 상품 조회
+GET {{baseUrl}}/api/products/price-range?minPrice=50&maxPrice=200
+Accept: {{contentType}}
+
+### 9. 재고 있는 상품 조회
+GET {{baseUrl}}/api/products/in-stock
+Accept: {{contentType}}
+
+### 10. 키워드로 상품 검색
+GET {{baseUrl}}/api/products/search?keyword=Java
+Accept: {{contentType}}
+
+### 11. 가격 오름차순 정렬
+GET {{baseUrl}}/api/products/sorted/price/asc
+Accept: {{contentType}}
+
+### 12. 가격 내림차순 정렬
+GET {{baseUrl}}/api/products/sorted/price/desc
+Accept: {{contentType}}
+
+### 13. 특정 가격 이상 상품 개수
+GET {{baseUrl}}/api/products/count/above-price/100
+Accept: {{contentType}}
+
+### 14. 카테고리별 평균 가격
+GET {{baseUrl}}/api/products/average-price/Electronics
+Accept: {{contentType}}
+
+### 15. 가장 비싼 상품 TOP 5
+GET {{baseUrl}}/api/products/top-expensive/5
+Accept: {{contentType}}
+
+### 16. 상품 통계 정보
+GET {{baseUrl}}/api/products/statistics
+Accept: {{contentType}}
+
+### 17. Spring Data JDBC CRUD 예제 실행
+POST {{baseUrl}}/api/products/jdbc-example
+Accept: {{contentType}}
+
+###
+# ===========================================
+# 사용자 API 테스트
+# ===========================================
+
+### 18. 모든 사용자 조회
+GET {{baseUrl}}/api/users
+Accept: {{contentType}}
+
+### 19. 사용자 ID로 조회
+GET {{baseUrl}}/api/users/1
+Accept: {{contentType}}
+
+### 20. 새 사용자 생성
+POST {{baseUrl}}/api/users
+Content-Type: {{contentType}}
+
+{
+  "username": "test_user",
+  "email": "test@example.com",
+  "fullName": "Test User",
+  "age": 25,
+  "active": true
+}
+
+### 21. 사용자 업데이트
+PUT {{baseUrl}}/api/users/1
+Content-Type: {{contentType}}
+
+{
+  "username": "john_doe_updated",
+  "email": "john.updated@example.com",
+  "fullName": "John Doe Updated",
+  "age": 29,
+  "active": true
+}
+
+### 22. 사용자 비활성화
+PATCH {{baseUrl}}/api/users/6/deactivate
+Accept: {{contentType}}
+
+### 23. 사용자 삭제
+DELETE {{baseUrl}}/api/users/7
+Accept: {{contentType}}
+
+### 24. 사용자명으로 조회
+GET {{baseUrl}}/api/users/username/john_doe
+Accept: {{contentType}}
+
+### 25. 이메일로 조회
+GET {{baseUrl}}/api/users/email/jane@example.com
+Accept: {{contentType}}
+
+### 26. 활성 사용자 조회
+GET {{baseUrl}}/api/users/active
+Accept: {{contentType}}
+
+### 27. 비활성 사용자 조회
+GET {{baseUrl}}/api/users/inactive
+Accept: {{contentType}}
+
+### 28. 나이 범위로 사용자 조회
+GET {{baseUrl}}/api/users/age-range?minAge=25&maxAge=35
+Accept: {{contentType}}
+
+### 29. 특정 나이 이상 사용자 조회
+GET {{baseUrl}}/api/users/min-age/30
+Accept: {{contentType}}
+
+### 30. 사용자명 검색
+GET {{baseUrl}}/api/users/search?keyword=john
+Accept: {{contentType}}
+
+### 31. 최근 가입 사용자 (최근 30일)
+GET {{baseUrl}}/api/users/recent
+Accept: {{contentType}}
+
+### 32. 최근 가입 사용자 (최근 7일)
+GET {{baseUrl}}/api/users/recent?days=7
+Accept: {{contentType}}
+
+### 33. 활성 사용자 중 특정 나이 이상
+GET {{baseUrl}}/api/users/active/min-age/25
+Accept: {{contentType}}
+
+### 34. 사용자 통계 정보
+GET {{baseUrl}}/api/users/statistics
+Accept: {{contentType}}
+
+###
+# ===========================================
+# 오류 테스트
+# ===========================================
+
+### 35. 존재하지 않는 상품 조회
+GET {{baseUrl}}/api/products/999
+Accept: {{contentType}}
+
+### 36. 존재하지 않는 사용자 조회
+GET {{baseUrl}}/api/users/999
+Accept: {{contentType}}
+
+### 37. 잘못된 사용자 생성 (중복 사용자명)
+POST {{baseUrl}}/api/users
+Content-Type: {{contentType}}
+
+{
+  "username": "john_doe",
+  "email": "duplicate@example.com",
+  "fullName": "Duplicate User",
+  "age": 30,
+  "active": true
+}
+
+### 38. 잘못된 사용자 생성 (중복 이메일)
+POST {{baseUrl}}/api/users
+Content-Type: {{contentType}}
+
+{
+  "username": "unique_user",
+  "email": "john@example.com",
+  "fullName": "Another User",
+  "age": 30,
+  "active": true
+}
+
+###
+# ===========================================
+# H2 Console 접속 테스트
+# ===========================================
+
+### H2 Console 접속
+# 브라우저에서 http://localhost:8080/h2-console 접속
+# JDBC URL: jdbc:h2:mem:testdb
+# Username: sa
+# Password: (비워둠)
+
+###
+# ===========================================
+# 직접 SQL 쿼리 테스트 (H2 Console에서 실행)
+# ===========================================
+
+# SELECT * FROM products;
+# SELECT * FROM users;
+# SELECT * FROM products WHERE category = 'Electronics';
+# SELECT * FROM users WHERE active = true;
+# SELECT category, COUNT(*) as count FROM products GROUP BY category;
+# SELECT active, COUNT(*) as count FROM users GROUP BY active; 

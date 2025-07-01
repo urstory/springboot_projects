@@ -1,0 +1,37 @@
+# 운영 환경 설정
+server:
+  port: 80
+
+app:
+  name: Spring Profile Demo (운영환경)
+  environment: production
+  description: 운영 환경에서 실행되는 Spring Boot 애플리케이션
+  version: 1.0.0-RELEASE
+  database:
+    url: jdbc:mysql://prod-db-server:3306/prod_db
+    username: prod_user
+    password: ${DB_PASSWORD:prod_password}  # 환경변수 사용
+    max-connections: 50
+  features:
+    debug-mode: false
+    enable-cache: true
+    enable-metrics: true
+    timeout: 2000
+
+# 운영 환경 로깅 설정
+logging:
+  level:
+    root: ERROR
+    com.example.springprofiledemo: WARN
+  file:
+    name: /var/log/spring-profile-demo.log
+
+# 운영 환경에서만 사용하는 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"  # 최소한의 endpoint만 노출
+  endpoint:
+    health:
+      show-details: never  # 보안을 위해 상세 정보 숨김 

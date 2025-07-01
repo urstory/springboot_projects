@@ -1,0 +1,30 @@
+# application-dev.yml - 개발 환경 전용 설정 (5.4절 예제)
+
+server:
+  port: 8081
+
+logging:
+  level:
+    root: info
+    com.example.configdemo: debug
+  file:
+    name: logs/configdemo-dev.log
+
+# 개발 서버 데이터베이스 설정
+spring:
+  datasource:
+    url: jdbc:mysql://dev-db-server:3306/configdemo_dev
+    username: ${DB_USER:dev_user}
+    password: ${DB_PASS:dev_password}
+
+# 개발 환경 특화 설정
+app:
+  environment: "development"
+  debug-mode: true
+  cache-enabled: false
+  features:
+    mock-external-api: false
+    log-all-requests: true
+  external-apis:
+    timeout: 10000
+    retry-count: 3 

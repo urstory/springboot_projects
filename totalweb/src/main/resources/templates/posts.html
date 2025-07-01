@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 관리 - TotalWeb</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .main-content {
+            min-height: 100vh;
+        }
+        .loading {
+            display: none;
+        }
+        .api-error {
+            display: none;
+        }
+        .post-content {
+            max-height: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .post-actions .btn {
+            margin: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 사이드바 -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <h5 class="text-center mb-4">
+                        <i class="fas fa-desktop"></i> TotalWeb
+                    </h5>
+                    
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/dashboard}">
+                                <i class="fas fa-tachometer-alt"></i> 대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" th:href="@{/posts}">
+                                <i class="fas fa-file-alt"></i> 게시글 관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/users}">
+                                <i class="fas fa-users"></i> 사용자 관리
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <div class="nav-item">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-link nav-link border-0 w-100 text-start">
+                                <i class="fas fa-sign-out-alt"></i> 로그아웃
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- 메인 콘텐츠 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <!-- 헤더 -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-file-alt"></i> 게시글 관리
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#postModal" onclick="openCreateModal()">
+                            <i class="fas fa-plus"></i> 새 게시글
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="loadPosts()">
+                            <i class="fas fa-sync-alt"></i> 새로고침
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 검색 및 필터 -->
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="searchQuery" class="form-label">검색</label>
+                                <input type="text" class="form-control" id="searchQuery" placeholder="제목 또는 내용으로 검색...">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="authorFilter" class="form-label">작성자</label>
+                                <select class="form-select" id="authorFilter">
+                                    <option value="">전체</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="sortBy" class="form-label">정렬</label>
+                                <select class="form-select" id="sortBy">
+                                    <option value="createdAt,desc">최신순</option>
+                                    <option value="createdAt,asc">등록순</option>
+                                    <option value="title,asc">제목순</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-outline-secondary w-100" onclick="applyFilters()">
+                                    <i class="fas fa-search"></i> 검색
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 로딩 및 에러 메시지 -->
+                <div class="loading alert alert-info">
+                    <i class="fas fa-spinner fa-spin"></i> 데이터를 불러오는 중...
+                </div>
+                
+                <div class="api-error alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="error-message"></span>
+                </div>
+                
+                <!-- 게시글 테이블 -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">게시글 목록</h6>
+                        <small class="text-muted">총 <span id="totalCount">0</span>개</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 80px;">ID</th>
+                                        <th style="width: 200px;">제목</th>
+                                        <th>내용</th>
+                                        <th style="width: 120px;">작성자</th>
+                                        <th style="width: 140px;">작성일</th>
+                                        <th style="width: 140px;">수정일</th>
+                                        <th style="width: 150px;">작업</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="postsTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center">
+                                            <i class="fas fa-spinner fa-spin"></i> 데이터를 불러오는 중...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- 페이지네이션 -->
+                        <nav aria-label="게시글 페이지네이션">
+                            <ul class="pagination justify-content-center" id="pagination">
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- 게시글 생성/수정 모달 -->
+    <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="postModalLabel">새 게시글</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="postForm">
+                        <input type="hidden" id="postId">
+                        
+                        <div class="mb-3">
+                            <label for="postTitle" class="form-label">제목 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="postTitle" maxlength="200" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="postContent" class="form-label">내용 <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="postContent" rows="10" required></textarea>
+                        </div>
+                        
+                        <div class="modal-form-loading" style="display: none;">
+                            <div class="text-center">
+                                <i class="fas fa-spinner fa-spin"></i> 처리 중...
+                            </div>
+                        </div>
+                        
+                        <div class="modal-form-error alert alert-danger" style="display: none;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span id="modal-error-message"></span>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" onclick="savePost()">
+                        <i class="fas fa-save"></i> 저장
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 게시글 상세 보기 모달 -->
+    <div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewModalLabel">게시글 상세</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>제목:</strong></div>
+                        <div class="col-sm-9" id="viewTitle"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>작성자:</strong></div>
+                        <div class="col-sm-9" id="viewAuthor"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>작성일:</strong></div>
+                        <div class="col-sm-9" id="viewCreatedAt"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3"><strong>수정일:</strong></div>
+                        <div class="col-sm-9" id="viewUpdatedAt"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-3"><strong>내용:</strong></div>
+                        <div class="col-sm-9">
+                            <div id="viewContent" style="white-space: pre-wrap; background: #f8f9fa; padding: 15px; border-radius: 5px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script th:inline="javascript">
+        const API_BASE_URL = /*[[${apiBaseUrl}]]*/ 'http://localhost:8082';
+        
+        // JWT 토큰 관리
+        const TokenManager = {
+            get: () => localStorage.getItem('jwt_token'),
+            set: (token) => localStorage.setItem('jwt_token', token),
+            remove: () => localStorage.removeItem('jwt_token'),
+            isValid: () => {
+                const token = TokenManager.get();
+                if (!token) return false;
+                
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    return payload.exp * 1000 > Date.now();
+                } catch {
+                    return false;
+                }
+            }
+        };
+        
+        // 현재 페이지 상태
+        let currentPage = 0;
+        let currentSize = 10;
+        let currentSort = 'createdAt,desc';
+        let currentSearch = '';
+        let currentAuthor = '';
+        let totalPages = 0;
+        
+        // API 호출 공통 함수
+        async function apiCall(endpoint, options = {}) {
+            const token = TokenManager.get();
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (token && TokenManager.isValid()) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                ...options,
+                headers
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+        
+        // 게시글 목록 로드
+        async function loadPosts(page = 0) {
+            currentPage = page;
+            showLoading(true);
+            hideError();
+            
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    size: currentSize,
+                    sort: currentSort
+                });
+                
+                if (currentSearch) {
+                    params.append('search', currentSearch);
+                }
+                
+                if (currentAuthor) {
+                    params.append('author', currentAuthor);
+                }
+                
+                const data = await apiCall(`/api/posts?${params}`);
+                
+                displayPosts(data.content || []);
+                updatePagination(data);
+                updateTotalCount(data.totalElements || 0);
+                
+            } catch (error) {
+                console.error('게시글 로드 실패:', error);
+                showError('게시글을 불러오는데 실패했습니다: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 게시글 목록 표시
+        function displayPosts(posts) {
+            const tbody = document.getElementById('postsTableBody');
+            
+            if (posts.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">게시글이 없습니다.</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            const html = posts.map(post => `
+                <tr>
+                    <td>${post.id}</td>
+                    <td>
+                        <strong>${escapeHtml(post.title)}</strong>
+                    </td>
+                    <td>
+                        <div class="post-content">
+                            ${escapeHtml(post.content).substring(0, 100)}${post.content.length > 100 ? '...' : ''}
+                        </div>
+                    </td>
+                    <td>${escapeHtml(post.authorName)}</td>
+                    <td>${formatDate(post.createdAt)}</td>
+                    <td>${post.updatedAt ? formatDate(post.updatedAt) : '-'}</td>
+                    <td>
+                        <div class="post-actions">
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewPost(${post.id})" title="보기">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="editPost(${post.id})" title="수정">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deletePost(${post.id})" title="삭제">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            tbody.innerHTML = html;
+        }
+        
+        // 페이지네이션 업데이트
+        function updatePagination(data) {
+            totalPages = data.totalPages || 0;
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            // 이전 페이지
+            if (currentPage > 0) {
+                html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="loadPosts(${currentPage - 1})">이전</a>
+                </li>`;
+            }
+            
+            // 페이지 번호
+            const startPage = Math.max(0, currentPage - 2);
+            const endPage = Math.min(totalPages - 1, currentPage + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="loadPosts(${i})">${i + 1}</a>
+                </li>`;
+            }
+            
+            // 다음 페이지
+            if (currentPage < totalPages - 1) {
+                html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="loadPosts(${currentPage + 1})">다음</a>
+                </li>`;
+            }
+            
+            pagination.innerHTML = html;
+        }
+        
+        // 전체 개수 업데이트
+        function updateTotalCount(total) {
+            document.getElementById('totalCount').textContent = total;
+        }
+        
+        // 필터 적용
+        function applyFilters() {
+            currentSearch = document.getElementById('searchQuery').value.trim();
+            currentAuthor = document.getElementById('authorFilter').value;
+            currentSort = document.getElementById('sortBy').value;
+            loadPosts(0);
+        }
+        
+        // 새 게시글 모달 열기
+        function openCreateModal() {
+            document.getElementById('postModalLabel').textContent = '새 게시글';
+            document.getElementById('postForm').reset();
+            document.getElementById('postId').value = '';
+            hideModalError();
+        }
+        
+        // 게시글 수정 모달 열기
+        async function editPost(id) {
+            try {
+                const post = await apiCall(`/api/posts/${id}`);
+                
+                document.getElementById('postModalLabel').textContent = '게시글 수정';
+                document.getElementById('postId').value = post.id;
+                document.getElementById('postTitle').value = post.title;
+                document.getElementById('postContent').value = post.content;
+                
+                const modal = new bootstrap.Modal(document.getElementById('postModal'));
+                modal.show();
+                
+            } catch (error) {
+                showError('게시글 정보를 불러오는데 실패했습니다: ' + error.message);
+            }
+        }
+        
+        // 게시글 상세 보기
+        async function viewPost(id) {
+            try {
+                const post = await apiCall(`/api/posts/${id}`);
+                
+                document.getElementById('viewTitle').textContent = post.title;
+                document.getElementById('viewAuthor').textContent = post.authorName;
+                document.getElementById('viewCreatedAt').textContent = formatDate(post.createdAt);
+                document.getElementById('viewUpdatedAt').textContent = post.updatedAt ? formatDate(post.updatedAt) : '수정되지 않음';
+                document.getElementById('viewContent').textContent = post.content;
+                
+                const modal = new bootstrap.Modal(document.getElementById('viewModal'));
+                modal.show();
+                
+            } catch (error) {
+                showError('게시글 정보를 불러오는데 실패했습니다: ' + error.message);
+            }
+        }
+        
+        // 게시글 저장
+        async function savePost() {
+            const id = document.getElementById('postId').value;
+            const title = document.getElementById('postTitle').value.trim();
+            const content = document.getElementById('postContent').value.trim();
+            
+            if (!title || !content) {
+                showModalError('제목과 내용을 모두 입력해주세요.');
+                return;
+            }
+            
+            showModalLoading(true);
+            hideModalError();
+            
+            try {
+                const postData = { title, content };
+                
+                if (id) {
+                    // 수정
+                    await apiCall(`/api/posts/${id}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(postData)
+                    });
+                } else {
+                    // 생성
+                    await apiCall('/api/posts', {
+                        method: 'POST',
+                        body: JSON.stringify(postData)
+                    });
+                }
+                
+                const modal = bootstrap.Modal.getInstance(document.getElementById('postModal'));
+                modal.hide();
+                
+                loadPosts(currentPage);
+                
+            } catch (error) {
+                console.error('게시글 저장 실패:', error);
+                showModalError('게시글 저장에 실패했습니다: ' + error.message);
+            } finally {
+                showModalLoading(false);
+            }
+        }
+        
+        // 게시글 삭제
+        async function deletePost(id) {
+            if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
+                return;
+            }
+            
+            try {
+                await apiCall(`/api/posts/${id}`, { method: 'DELETE' });
+                loadPosts(currentPage);
+            } catch (error) {
+                console.error('게시글 삭제 실패:', error);
+                showError('게시글 삭제에 실패했습니다: ' + error.message);
+            }
+        }
+        
+        // 유틸리티 함수들
+        function showLoading(show = true) {
+            const loadingEl = document.querySelector('.loading');
+            if (loadingEl) {
+                loadingEl.style.display = show ? 'block' : 'none';
+            }
+        }
+        
+        function showError(message) {
+            const errorEl = document.querySelector('.api-error');
+            const errorMsgEl = document.getElementById('error-message');
+            if (errorEl && errorMsgEl) {
+                errorMsgEl.textContent = message;
+                errorEl.style.display = 'block';
+            }
+        }
+        
+        function hideError() {
+            const errorEl = document.querySelector('.api-error');
+            if (errorEl) {
+                errorEl.style.display = 'none';
+            }
+        }
+        
+        function showModalLoading(show = true) {
+            const loadingEl = document.querySelector('.modal-form-loading');
+            if (loadingEl) {
+                loadingEl.style.display = show ? 'block' : 'none';
+            }
+        }
+        
+        function showModalError(message) {
+            const errorEl = document.querySelector('.modal-form-error');
+            const errorMsgEl = document.getElementById('modal-error-message');
+            if (errorEl && errorMsgEl) {
+                errorMsgEl.textContent = message;
+                errorEl.style.display = 'block';
+            }
+        }
+        
+        function hideModalError() {
+            const errorEl = document.querySelector('.modal-form-error');
+            if (errorEl) {
+                errorEl.style.display = 'none';
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            // JWT 토큰 확인
+            if (!TokenManager.get() || !TokenManager.isValid()) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // 초기 데이터 로드
+            loadPosts();
+            
+            // 검색 입력 시 엔터 키 처리
+            document.getElementById('searchQuery').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    applyFilters();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

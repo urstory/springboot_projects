@@ -1,0 +1,33 @@
+# 기본 애플리케이션 설정
+spring:
+  profiles:
+    active: dev  # 기본 활성화 프로파일
+  application:
+    name: spring-profile-demo
+
+# 기본 서버 설정
+server:
+  port: 8080
+
+# 기본 애플리케이션 구성
+app:
+  name: Spring Profile Demo
+  environment: default
+  description: Spring Boot Profile 설정 테스트 애플리케이션
+  version: 1.0.0
+  database:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: 
+    max-connections: 5
+  features:
+    debug-mode: false
+    enable-cache: false
+    enable-metrics: false
+    timeout: 3000
+
+# 로깅 설정
+logging:
+  level:
+    root: INFO
+    com.example.springprofiledemo: INFO 

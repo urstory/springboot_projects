@@ -1,0 +1,38 @@
+# application-prod.yml - 운영 환경 전용 설정 (5.4절 예제)
+
+server:
+  port: 80
+
+logging:
+  level:
+    root: warn
+    com.example.configdemo: info
+  file:
+    name: /var/log/configdemo/configdemo-prod.log
+    max-size: 100MB
+    max-history: 30
+
+# 운영 환경 데이터베이스 설정
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST:prod-db-server}:${DB_PORT:3306}/${DB_NAME:configdemo_prod}
+    username: ${DB_USER}
+    password: ${DB_PASS}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+
+# 운영 환경 특화 설정
+app:
+  environment: "production"
+  debug-mode: false
+  cache-enabled: true
+  features:
+    mock-external-api: false
+    log-all-requests: false
+  external-apis:
+    timeout: 5000
+    retry-count: 2
+  security:
+    csrf-enabled: true
+    ssl-required: true 

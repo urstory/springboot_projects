@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 관리 - TotalWeb</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .main-content {
+            min-height: 100vh;
+        }
+        .loading {
+            display: none;
+        }
+        .api-error {
+            display: none;
+        }
+        .user-role {
+            font-size: 0.8em;
+        }
+        .user-status {
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 사이드바 -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <h5 class="text-center mb-4">
+                        <i class="fas fa-desktop"></i> TotalWeb
+                    </h5>
+                    
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/dashboard}">
+                                <i class="fas fa-tachometer-alt"></i> 대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/posts}">
+                                <i class="fas fa-file-alt"></i> 게시글 관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" th:href="@{/users}">
+                                <i class="fas fa-users"></i> 사용자 관리
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <div class="nav-item">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-link nav-link border-0 w-100 text-start">
+                                <i class="fas fa-sign-out-alt"></i> 로그아웃
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- 메인 콘텐츠 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <!-- 헤더 -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-users"></i> 사용자 관리
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-outline-primary" onclick="loadUsers()">
+                            <i class="fas fa-sync-alt"></i> 새로고침
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 로딩 및 에러 메시지 -->
+                <div class="loading alert alert-info">
+                    <i class="fas fa-spinner fa-spin"></i> 데이터를 불러오는 중...
+                </div>
+                
+                <div class="api-error alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="error-message"></span>
+                </div>
+                
+                <!-- 알림 메시지 -->
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>참고:</strong> 이 페이지는 totalexam API에서 사용자 정보를 조회만 할 수 있습니다. 
+                    실제 사용자 관리 기능은 API 서버에서 제공되지 않습니다.
+                </div>
+                
+                <!-- 사용자 카드 목록 -->
+                <div class="row" id="usersContainer">
+                    <div class="col-12 text-center">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">사용자 정보를 불러오는 중...</p>
+                    </div>
+                </div>
+                
+                <!-- 테스트 계정 정보 -->
+                <div class="card shadow mt-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle"></i> 테스트 계정 정보
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-user-shield"></i> 관리자 계정</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>사용자명:</strong> admin</li>
+                                    <li><strong>이메일:</strong> admin@example.com</li>
+                                    <li><strong>권한:</strong> ROLE_ADMIN</li>
+                                    <li><strong>비밀번호:</strong> password123</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-users"></i> 일반 사용자 계정</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>사용자명:</strong> user1, user2, john, jane</li>
+                                    <li><strong>권한:</strong> ROLE_USER</li>
+                                    <li><strong>비밀번호:</strong> password123 (공통)</li>
+                                    <li><strong>상태:</strong> 모두 활성화</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h6><i class="fas fa-key"></i> API 인증 정보</h6>
+                                <p class="mb-1">
+                                    <strong>로그인 엔드포인트:</strong> 
+                                    <code>POST <span th:text="${apiBaseUrl}">/api/auth/login</span></code>
+                                </p>
+                                <p class="mb-1">
+                                    <strong>JWT 토큰 검증:</strong> 
+                                    <code>GET <span th:text="${apiBaseUrl}">/api/auth/validate</span></code>
+                                </p>
+                                <p class="text-muted">
+                                    모든 계정의 비밀번호는 "password123"이며, JWT 토큰의 유효기간은 24시간입니다.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script th:inline="javascript">
+        const API_BASE_URL = /*[[${apiBaseUrl}]]*/ 'http://localhost:8082';
+        
+        // JWT 토큰 관리
+        const TokenManager = {
+            get: () => localStorage.getItem('jwt_token'),
+            set: (token) => localStorage.setItem('jwt_token', token),
+            remove: () => localStorage.removeItem('jwt_token'),
+            isValid: () => {
+                const token = TokenManager.get();
+                if (!token) return false;
+                
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    return payload.exp * 1000 > Date.now();
+                } catch {
+                    return false;
+                }
+            }
+        };
+        
+        // 사용자 정보 (API에서 사용자 목록을 제공하지 않으므로 하드코딩)
+        const testUsers = [
+            {
+                id: 1,
+                username: 'admin',
+                email: 'admin@example.com',
+                fullName: '관리자',
+                role: 'ROLE_ADMIN',
+                active: true,
+                createdAt: '2024-01-01T00:00:00'
+            },
+            {
+                id: 2,
+                username: 'user1',
+                email: 'user1@example.com',
+                fullName: '사용자1',
+                role: 'ROLE_USER',
+                active: true,
+                createdAt: '2024-01-02T00:00:00'
+            },
+            {
+                id: 3,
+                username: 'user2',
+                email: 'user2@example.com',
+                fullName: '사용자2',
+                role: 'ROLE_USER',
+                active: true,
+                createdAt: '2024-01-03T00:00:00'
+            },
+            {
+                id: 4,
+                username: 'john',
+                email: 'john@example.com',
+                fullName: 'John Doe',
+                role: 'ROLE_USER',
+                active: true,
+                createdAt: '2024-01-04T00:00:00'
+            },
+            {
+                id: 5,
+                username: 'jane',
+                email: 'jane@example.com',
+                fullName: 'Jane Smith',
+                role: 'ROLE_USER',
+                active: true,
+                createdAt: '2024-01-05T00:00:00'
+            }
+        ];
+        
+        // 사용자 목록 로드
+        async function loadUsers() {
+            showLoading(true);
+            hideError();
+            
+            try {
+                // API에서 사용자 목록을 제공하지 않으므로 테스트 데이터 사용
+                setTimeout(() => {
+                    displayUsers(testUsers);
+                    showLoading(false);
+                }, 500);
+                
+            } catch (error) {
+                console.error('사용자 로드 실패:', error);
+                showError('사용자 정보를 불러오는데 실패했습니다: ' + error.message);
+                showLoading(false);
+            }
+        }
+        
+        // 사용자 목록 표시
+        function displayUsers(users) {
+            const container = document.getElementById('usersContainer');
+            
+            if (users.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center">
+                        <p class="text-muted">사용자가 없습니다.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const html = users.map(user => `
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="avatar bg-${user.role === 'ROLE_ADMIN' ? 'primary' : 'secondary'} text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 50px; height: 50px;">
+                                    <i class="fas fa-${user.role === 'ROLE_ADMIN' ? 'user-shield' : 'user'}"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="card-title mb-1">${escapeHtml(user.fullName)}</h6>
+                                    <p class="card-text text-muted mb-0">@${escapeHtml(user.username)}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-envelope"></i> ${escapeHtml(user.email)}
+                                </small>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <span class="badge bg-${user.role === 'ROLE_ADMIN' ? 'primary' : 'secondary'} user-role">
+                                    ${user.role === 'ROLE_ADMIN' ? '관리자' : '일반 사용자'}
+                                </span>
+                                <span class="badge bg-${user.active ? 'success' : 'danger'} user-status ms-1">
+                                    ${user.active ? '활성' : '비활성'}
+                                </span>
+                            </div>
+                            
+                            <div class="text-muted">
+                                <small>
+                                    <i class="fas fa-calendar"></i> 
+                                    가입일: ${formatDate(user.createdAt)}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer bg-transparent">
+                            <button class="btn btn-sm btn-outline-primary" onclick="testLogin('${user.username}')" title="테스트 로그인">
+                                <i class="fas fa-sign-in-alt"></i> 테스트 로그인
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+        }
+        
+        // 테스트 로그인
+        async function testLogin(username) {
+            if (!confirm(`${username} 계정으로 테스트 로그인을 시도하시겠습니까?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        username: username, 
+                        password: 'password123' 
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || '로그인에 실패했습니다.');
+                }
+                
+                const data = await response.json();
+                
+                // JWT 토큰 저장
+                TokenManager.set(data.token);
+                
+                alert(`${username} 계정으로 성공적으로 로그인되었습니다!`);
+                
+                // 대시보드로 리다이렉트
+                window.location.href = '/dashboard';
+                
+            } catch (error) {
+                console.error('테스트 로그인 실패:', error);
+                alert('테스트 로그인에 실패했습니다: ' + error.message);
+            }
+        }
+        
+        // 유틸리티 함수들
+        function showLoading(show = true) {
+            const loadingEl = document.querySelector('.loading');
+            if (loadingEl) {
+                loadingEl.style.display = show ? 'block' : 'none';
+            }
+        }
+        
+        function showError(message) {
+            const errorEl = document.querySelector('.api-error');
+            const errorMsgEl = document.getElementById('error-message');
+            if (errorEl && errorMsgEl) {
+                errorMsgEl.textContent = message;
+                errorEl.style.display = 'block';
+            }
+        }
+        
+        function hideError() {
+            const errorEl = document.querySelector('.api-error');
+            if (errorEl) {
+                errorEl.style.display = 'none';
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('ko-KR');
+        }
+        
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            // JWT 토큰 확인
+            if (!TokenManager.get() || !TokenManager.isValid()) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // 사용자 목록 로드
+            loadUsers();
+        });
+    </script>
+</body>
+</html> 

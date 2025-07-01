@@ -1,0 +1,52 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: securityexam03
+  
+  # Redis 설정 (블랙리스트 기능용, 선택사항)
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+    password: # Redis 비밀번호가 있는 경우 설정
+    jedis:
+      pool:
+        max-active: 8
+        max-wait: -1ms
+        max-idle: 8
+        min-idle: 0
+
+  # 로깅 설정
+  output:
+    ansi:
+      enabled: always
+
+# JWT 설정
+jwt:
+  secret: securityexam03-jwt-secret-key-for-token-generation-and-validation
+  expiration: 3600000 # 1시간 (밀리초)
+
+# 로깅 설정
+logging:
+  level:
+    com.example.securityexam03: INFO
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    root: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 액추에이터 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized 

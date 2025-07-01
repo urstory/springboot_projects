@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: securityexam01
+  
+  # Spring Security 로그 레벨 설정
+  security:
+    user:
+      name: disabled  # 기본 사용자 비활성화 (CustomUserDetailsService 사용)
+
+# 로깅 설정
+logging:
+  level:
+    org.springframework.security: INFO
+    com.example.securityexam01: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# 관리 엔드포인트 설정 (선택사항)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health
+  endpoint:
+    health:
+      show-details: when-authorized 

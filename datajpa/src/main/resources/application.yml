@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: datajpa
+
+  # H2 데이터베이스 설정 (임베딩 모드)
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: 
+
+  # H2 콘솔 활성화
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 애플리케이션 시작 시 테이블 생성, 종료 시 삭제
+    show-sql: true  # SQL 쿼리 로그 출력
+    format-sql: true  # SQL 쿼리 포맷팅
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+        use_sql_comments: true  # SQL 주석 출력
+        jdbc:
+          batch_size: 20  # 배치 처리 사이즈
+        order_inserts: true  # INSERT 순서 최적화
+        order_updates: true  # UPDATE 순서 최적화
+
+  # 웹 설정
+  web:
+    resources:
+      add-mappings: true
+
+# 서버 설정
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# 로깅 설정
+logging:
+  level:
+    org.hibernate.SQL: DEBUG  # SQL 쿼리 로그
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE  # 파라미터 값 로그
+    com.example.datajpa: DEBUG  # 애플리케이션 로그
+    org.springframework.transaction: DEBUG  # 트랜잭션 로그
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# 관리 엔드포인트 설정 (옵션)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always 

@@ -1,0 +1,134 @@
+# 내용.md 5.3절, 5.4절 예제 - application.yml 설정
+# Spring Boot Configuration Demo
+
+# 기본 애플리케이션 설정
+spring:
+  application:
+    name: configdemo
+  profiles:
+    active: local  # 기본적으로 활성화할 프로파일 설정
+
+# Actuator 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env,configprops
+  endpoint:
+    health:
+      show-details: always
+
+# 커스텀 애플리케이션 설정 (5.3절 예제)
+app:
+  name: "Configuration Demo Application"
+  version: "1.0.0"
+  api-key: "abcdef12345"
+  timeout:
+    connection: 5000
+    read: 10000
+  servers:
+    - http://server1.example.com
+    - http://server2.example.com
+    - http://server3.example.com
+  error-codes:
+    NOT_FOUND: 404
+    INTERNAL_ERROR: 500
+    UNAUTHORIZED: 401
+
+# 환경변수 활용 예제 (5.3절)
+database:
+  url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:configdemo}
+  username: ${DB_USER:root}
+  password: ${DB_PASS:password}
+
+---
+
+# LOCAL 프로파일 설정 (5.4절 예제)
+spring:
+  config:
+    activate:
+      on-profile: local
+      
+server:
+  port: 8080
+  
+logging:
+  level:
+    root: debug
+    com.example.configdemo: debug
+    
+custom-message: "Local 환경입니다."
+
+app:
+  environment: "local"
+  debug-mode: true
+  cache-enabled: false
+
+---
+
+# DEV 프로파일 설정 (5.4절 예제)
+spring:
+  config:
+    activate:
+      on-profile: dev
+      
+server:
+  port: 8081
+  
+logging:
+  level:
+    root: info
+    com.example.configdemo: debug
+    
+custom-message: "개발 환경입니다."
+
+app:
+  environment: "development"
+  debug-mode: true
+  cache-enabled: false
+
+---
+
+# PROD 프로파일 설정 (5.4절 예제)
+spring:
+  config:
+    activate:
+      on-profile: prod
+      
+server:
+  port: 80
+  
+logging:
+  level:
+    root: warn
+    com.example.configdemo: info
+    
+custom-message: "운영 환경입니다."
+
+app:
+  environment: "production"
+  debug-mode: false
+  cache-enabled: true
+
+---
+
+# TEST 프로파일 설정
+spring:
+  config:
+    activate:
+      on-profile: test
+      
+server:
+  port: 8082
+  
+logging:
+  level:
+    root: info
+    com.example.configdemo: debug
+    
+custom-message: "테스트 환경입니다."
+
+app:
+  environment: "test"
+  debug-mode: true
+  cache-enabled: false 

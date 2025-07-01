@@ -1,0 +1,33 @@
+# 테스트 환경 설정
+server:
+  port: 8082
+
+app:
+  name: Spring Profile Demo (테스트환경)
+  environment: testing
+  description: 테스트 환경에서 실행되는 Spring Boot 애플리케이션
+  version: 1.0.0-TEST
+  database:
+    url: jdbc:mysql://test-db-server:3306/test_db
+    username: test_user
+    password: test_password
+    max-connections: 20
+  features:
+    debug-mode: false
+    enable-cache: true
+    enable-metrics: true
+    timeout: 4000
+
+# 테스트 환경 로깅 설정
+logging:
+  level:
+    root: WARN
+    com.example.springprofiledemo: INFO
+    org.springframework: WARN
+
+# 테스트 환경에서만 사용하는 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics"  # 필요한 endpoint만 노출 

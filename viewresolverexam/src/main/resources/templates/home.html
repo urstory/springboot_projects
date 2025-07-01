@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">ViewResolver 예제</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .nav-links {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .nav-links a {
+            display: inline-block;
+            margin: 10px 15px 10px 0;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .nav-links a:hover {
+            background-color: #0056b3;
+        }
+        .info-box {
+            background-color: #d1ecf1;
+            border: 1px solid #b8daff;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .process-flow {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 th:text="${title}">ViewResolver 예제</h1>
+        
+        <div class="info-box">
+            <h3>🎯 ViewResolver 작동 과정</h3>
+            <p th:text="${message}">ViewResolver를 통해 HTML 페이지가 반환됩니다.</p>
+        </div>
+
+        <div class="process-flow">
+            <h3>📋 처리 흐름</h3>
+            <ol>
+                <li><strong>Controller 반환</strong>: "home" (View 이름)</li>
+                <li><strong>DispatcherServlet</strong>: View 이름을 ViewResolver에 전달</li>
+                <li><strong>ThymeleafViewResolver</strong>: "home" → "/templates/home.html" 변환</li>
+                <li><strong>최종 응답</strong>: HTML 페이지 반환</li>
+            </ol>
+        </div>
+
+        <div class="nav-links">
+            <h3>🔗 예제 페이지</h3>
+            <a href="/pages/users">사용자 목록 (ViewResolver)</a>
+            <a href="/pages/users/1">사용자 상세 (ViewResolver)</a>
+            <a href="/api/users">API 사용자 목록 (MessageConverter)</a>
+            <a href="/api/info">API 정보 (MessageConverter)</a>
+        </div>
+
+        <div class="info-box">
+            <h3>💡 학습 포인트</h3>
+            <ul>
+                <li><strong>ViewResolver</strong>: View 이름 → HTML 페이지 변환</li>
+                <li><strong>MessageConverter</strong>: 객체 → JSON 응답 변환</li>
+                <li><strong>@Controller</strong>: View 이름 반환 (HTML 응답)</li>
+                <li><strong>@RestController</strong>: 객체 반환 (JSON 응답)</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 

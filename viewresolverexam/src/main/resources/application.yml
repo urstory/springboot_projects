@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: viewresolver-exam
+  
+  # Thymeleaf 설정 (ViewResolver 관련)
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    cache: false  # 개발 시 캐시 비활성화 (운영에서는 true)
+    encoding: UTF-8
+    mode: HTML
+
+logging:
+  level:
+    root: INFO
+    com.example.viewresolverexam: DEBUG
+    org.springframework.web: DEBUG 

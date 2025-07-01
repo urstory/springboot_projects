@@ -1,0 +1,135 @@
+###
+# Spring Security 예제 테스트 - CustomAuthenticationFilter 활용
+# 내용.md 6.3절 - UsernamePasswordAuthenticationFilter를 활용한 로그인 API 개발
+###
+
+### 1. 애플리케이션 정보 조회 (인증 불필요)
+GET http://localhost:8081/api/info
+
+### 2. 테스트 사용자 목록 조회 (인증 불필요)
+GET http://localhost:8081/api/users
+
+### 3. 커스텀 필터를 통한 로그인 성공 테스트 - user1 (USER 권한)
+POST http://localhost:8081/api/login
+Content-Type: application/json
+
+{
+  "username": "user1",
+  "password": "password"
+}
+
+### 4. 커스텀 필터를 통한 로그인 성공 테스트 - admin (ADMIN 권한)
+POST http://localhost:8081/api/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "password"
+}
+
+### 5. 커스텀 필터를 통한 로그인 성공 테스트 - filter_user (필터 전용 사용자)
+POST http://localhost:8081/api/login
+Content-Type: application/json
+
+{
+  "username": "filter_user",
+  "password": "password"
+}
+
+### 6. 로그인 실패 테스트 - 잘못된 사용자명
+POST http://localhost:8081/api/login
+Content-Type: application/json
+
+{
+  "username": "wronguser",
+  "password": "password"
+}
+
+### 7. 로그인 실패 테스트 - 잘못된 비밀번호
+POST http://localhost:8081/api/login
+Content-Type: application/json
+
+{
+  "username": "user1",
+  "password": "wrongpassword"
+}
+
+### 8. 로그인 실패 테스트 - 사용자명 누락
+POST http://localhost:8081/api/login
+Content-Type: application/json
+
+{
+  "password": "password"
+}
+
+### 9. 로그인 실패 테스트 - 비밀번호 누락
+POST http://localhost:8081/api/login
+Content-Type: application/json
+
+{
+  "username": "user1"
+}
+
+### 10. 로그인 실패 테스트 - 빈 JSON
+POST http://localhost:8081/api/login
+Content-Type: application/json
+
+{}
+
+### 11. 로그인 실패 테스트 - 잘못된 Content-Type (form 데이터)
+POST http://localhost:8081/api/login
+Content-Type: application/x-www-form-urlencoded
+
+username=user1&password=password
+
+### 12. 로그인 실패 테스트 - GET 메서드 (POST만 허용)
+GET http://localhost:8081/api/login
+
+### 13. 로그인 실패 테스트 - 빈 사용자명
+POST http://localhost:8081/api/login
+Content-Type: application/json
+
+{
+  "username": "",
+  "password": "password"
+}
+
+### 14. 로그인 실패 테스트 - 공백만 있는 사용자명
+POST http://localhost:8081/api/login
+Content-Type: application/json
+
+{
+  "username": "   ",
+  "password": "password"
+}
+
+###
+# 테스트 시나리오 설명:
+# 
+# 🔹 CustomAuthenticationFilter 특징:
+# 1. UsernamePasswordAuthenticationFilter를 상속받아 JSON 요청 처리
+# 2. POST 요청과 application/json Content-Type만 허용
+# 3. 사용자명/비밀번호 유효성 검증
+# 4. 커스텀 성공/실패 핸들러로 JSON 응답 제공
+# 
+# 🔹 성공 응답 예시:
+# {
+#   "success": true,
+#   "message": "로그인 성공",
+#   "username": "user1",
+#   "authorities": ["ROLE_USER"],
+#   "timestamp": 1234567890
+# }
+# 
+# 🔹 실패 응답 예시:
+# {
+#   "success": false,
+#   "message": "로그인 실패: Bad credentials",
+#   "error": "BadCredentialsException",
+#   "timestamp": 1234567890
+# }
+# 
+# 🔹 securityexam01과의 차이점:
+# - securityexam01: Controller에서 AuthenticationManager 직접 호출
+# - securityexam02: Filter에서 인증 처리 후 핸들러로 응답 생성
+### 

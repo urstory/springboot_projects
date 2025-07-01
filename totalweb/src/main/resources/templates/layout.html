@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' - TotalWeb'">TotalWeb</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .main-content {
+            min-height: 100vh;
+        }
+        .loading {
+            display: none;
+        }
+        .api-error {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 사이드바 -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse" sec:authorize="isAuthenticated()">
+                <div class="position-sticky pt-3">
+                    <h5 class="text-center mb-4">
+                        <i class="fas fa-desktop"></i> TotalWeb
+                    </h5>
+                    
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/dashboard}">
+                                <i class="fas fa-tachometer-alt"></i> 대시보드
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/posts}">
+                                <i class="fas fa-file-alt"></i> 게시글 관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/users}">
+                                <i class="fas fa-users"></i> 사용자 관리
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <div class="nav-item">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-link nav-link border-0 w-100 text-start">
+                                <i class="fas fa-sign-out-alt"></i> 로그아웃
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- 메인 콘텐츠 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content" 
+                  th:class="${#authorization.expression('isAuthenticated()')} ? 'col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content' : 'col-12 px-md-4 main-content'">
+                
+                <!-- 헤더 -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" 
+                     sec:authorize="isAuthenticated()">
+                    <h1 class="h2" th:text="${title}">페이지 제목</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <span class="navbar-text me-3">
+                            환영합니다, <span sec:authentication="name">사용자</span>님!
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- 콘텐츠 영역 -->
+                <div th:replace="${content}">
+                    콘텐츠가 여기에 표시됩니다.
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- 공통 JavaScript -->
+    <script th:inline="javascript">
+        const API_BASE_URL = /*[[${apiBaseUrl}]]*/ 'http://localhost:8082';
+        
+        // JWT 토큰 관리
+        const TokenManager = {
+            get: () => localStorage.getItem('jwt_token'),
+            set: (token) => localStorage.setItem('jwt_token', token),
+            remove: () => localStorage.removeItem('jwt_token'),
+            isValid: () => {
+                const token = TokenManager.get();
+                if (!token) return false;
+                
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    return payload.exp * 1000 > Date.now();
+                } catch {
+                    return false;
+                }
+            }
+        };
+        
+        // API 호출 공통 함수
+        async function apiCall(endpoint, options = {}) {
+            const token = TokenManager.get();
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (token && TokenManager.isValid()) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API 호출 실패:', error);
+                throw error;
+            }
+        }
+        
+        // 로딩 표시
+        function showLoading(show = true) {
+            document.querySelectorAll('.loading').forEach(el => {
+                el.style.display = show ? 'block' : 'none';
+            });
+        }
+        
+        // 에러 표시
+        function showError(message, container = '.api-error') {
+            const errorEl = document.querySelector(container);
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+                setTimeout(() => {
+                    errorEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+    </script>
+    
+    <!-- 페이지별 스크립트 -->
+    <th:block th:replace="${scripts ?: ''}"></th:block>
+</body>
+</html> 

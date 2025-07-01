@@ -1,0 +1,40 @@
+server:
+  port: 8081  # securityexam01과 포트 충돌 방지
+
+spring:
+  application:
+    name: securityexam02
+  
+  # Spring Security 기본 사용자 비활성화
+  security:
+    user:
+      name: disabled  # CustomUserDetailsService 사용
+
+# 로깅 설정
+logging:
+  level:
+    org.springframework.security: INFO
+    com.example.securityexam02: DEBUG
+    com.example.securityexam02.filter: DEBUG  # 커스텀 필터 로그
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# 커스텀 설정 (애플리케이션에서 사용)
+app:
+  filter:
+    enabled: true
+    log-requests: true
+  security:
+    login-url: "/api/login"
+    success-message: "로그인 성공"
+    failure-message: "로그인 실패"
+
+# 관리 엔드포인트 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health
+  endpoint:
+    health:
+      show-details: when-authorized 
